@@ -365,7 +365,7 @@ void demo_ReadEvent(){
 	y2[counter]=muontrackcount;
               
               
-	//////////
+	
           
 	Int_t recotrackcount=0;
 	Int_t recotrackcount_smallest=0;
@@ -373,7 +373,7 @@ void demo_ReadEvent(){
 
           
 	for (auto const& b : recotrack_vec){
-     //   recotrackcount++;
+    
         
 	  StartX_reco=b.Vertex().X();
 	  StartY_reco=b.Vertex().Y();
@@ -395,7 +395,7 @@ void demo_ReadEvent(){
   
         
       angle_smallest=angle;
-   //   recotrackcount_smallest = recotrackcount;
+ 
       tracklength_reco_smallest=tracklength_reco;
       dotprod_smallest=dotprod;
       StartX_reco_smallest=StartX_reco;
@@ -407,28 +407,15 @@ void demo_ReadEvent(){
       costheta_smallest=costheta;
       tracklength_diff=tracklength_reco_smallest-muontracklength_det;
       tracklength_ratio=tracklength_reco_smallest/muontracklength_det;
-     //   if(tracklength_reco < 11.0 || angle > 0.1)
-   //         continue;
-   //     if (angle>0.1)
-    //        continue;
-	  
+
      
     if(tracklength_reco < 11.0 )
         continue;
     else
         break;
-    //    cout<<"muontrackcount: "<<muontrackcount<<endl;
-    //    cout<<"recotrackcount: "<<recotrackcount<<endl;
-    //    cout<<"Angle: "<<angle<<endl;
-    //    cout<<"Tracklength: "<<tracklength_reco<<endl;
         
     }
-          //end of dummy reco for loop
-   //   cout<<"Smallest Angle: "<<angle_smallest<<endl;
-   //   cout<<"Smallest Tracklength: "<<tracklength_reco_smallest<<endl;
 
-	/////////
- 
 	for (auto const& b : recotrack_vec){
                   
               
@@ -464,9 +451,7 @@ void demo_ReadEvent(){
                   
 	  angle = acos(costheta);
 	  
-	        //    if(angle > 0.1)
-	        //       continue;
-        
+
 
 
         
@@ -479,7 +464,7 @@ void demo_ReadEvent(){
                   
 	    angle_smallest=angle;
         
-	    //muontrackcount_smallest = muontrackcount;
+	    
 	    cout<<"Test Recotrackcount: "<<recotrackcount<<endl;
 	    cout<<"Test dotprod: "<<dotprod<<endl;
 	    recotrackcount_smallest = recotrackcount;
@@ -498,8 +483,6 @@ void demo_ReadEvent(){
                   
       
 	  }
-	//  cout<<"dotprod value here: "<<dotprod<<endl;
-	//  cout<<"dotprod_smallest value here: "<<dotprod_smallest<<endl;
         
 	}//end of real reco for loop
  
@@ -509,13 +492,11 @@ void demo_ReadEvent(){
 	cout<<"Best Match reco track length: "<<tracklength_reco_smallest<<endl;
 	cout<<"Best muon-reco track dot product magnitude: "<<dotprod_smallest<<endl;
           
-//	if ( recotrackcount_smallest == 0 )
-//          {cout <<"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"<<endl;}
-              
 	MCTracktree->Fill();
+     
       }//end of if mc loop
           
-      //     MCTracktree->Fill();
+      
           
       
     }//end of mc for loop
