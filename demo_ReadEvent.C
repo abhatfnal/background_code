@@ -23,6 +23,7 @@
 #include "TInterpreter.h"
 #include "TROOT.h"
 #include "TH1F.h"
+#include "TH2D.h"
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TStyle.h"
@@ -232,6 +233,23 @@ void demo_ReadEvent(){
   MCTracktree->Branch("tracklength_diff",&tracklength_diff,"tracklength_diff/D");
   MCTracktree->Branch("tracklength_ratio",&tracklength_ratio,"tracklength_ratio/D");
     
+
+
+
+
+
+
+
+
+  TH1D* h_angle_smallest = new TH1D("h_angle_smallest","Smallest Angle Difference ;Difference(radians);Number of track pairs",100000,0,1);
+  TH1D* h_tracklength_diff = new TH1D("h_tracklength_diff","Tracklength difference (Reco-True) ;Difference(cm);Number of track pairs",100000,-1000,1000);
+  TH1D* h_tracklength_ratio = new TH1D("h_tracklength_ratio","Tracklength ratio (Reco/True) ;Ratio;Number of track pairs",100000,0,5);
+  TH2D* h_angle_trackdiff = new TH2D("h_angle_trackdiff","Smallest Angle difference & tracklength difference;Smallest Angle difference (radians) ;Tracklength difference (cm)",10000,0,1,100000,-1000,1000);
+  TH2D* h_angle_trackratio = new TH2D("h_angle_trackratio","Smallest Angle difference & tracklength ratio;Smallest Angle difference (radians) ;Tracklength ratio",10000,0,1,100000,0,5);
+
+
+
+
 
     
     
@@ -493,6 +511,12 @@ void demo_ReadEvent(){
 	cout<<"Best muon-reco track dot product magnitude: "<<dotprod_smallest<<endl;
           
 	MCTracktree->Fill();
+
+	h_angle_smallest->Fill(angle_smallest);
+	h_tracklength_diff->Fill(tracklength_diff);
+	h_tracklength_ratio->Fill(tracklength_ratio);
+	h_angle_trackdiff->Fill(angle_smallest,tracklength_diff);
+	h_angle_trackratio->Fill(angle_smallest,tracklength_ratio);
      
       }//end of if mc loop
           
@@ -504,6 +528,28 @@ void demo_ReadEvent(){
       
   } //end loop over events!
   cout<<"Total Events: "<<counter<<endl;
+
+  TCanvas* canvas = new TCanvas("canvas","Matching Info!",1500,500);
+  canvas->Divide(5);
+  canvas->cd(1);
+  h_angle_smallest->Draw();
+  canvas->cd(2);
+  h_tracklength_diff->Draw();
+  canvas->cd(3);
+  h_tracklength_ratio->Draw();
+  canvas->cd(4);
+  h_angle_trackdiff->SetMarkerStyle(20);
+  h_angle_trackdiff->SetMarkerSize(0.5);
+  h_angle_trackdiff->SetMarkerColor(2);
+  h_angle_trackdiff->Draw();
+  canvas->cd(5);
+  h_angle_trackratio->SetMarkerStyle(20);
+  h_angle_trackratio->SetMarkerSize(0.5);
+  h_angle_trackratio->SetMarkerColor(4);
+  h_angle_trackratio->Draw();
+
+
+
 
   f_output.Write();
   f_output.Close();
