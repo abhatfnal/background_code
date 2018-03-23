@@ -59,7 +59,7 @@ void ShowUnderOverFlow( TH1* h1){
 
 
 
-void demo_ReadEvent(){
+void dotprod(){
  
   gStyle->SetOptStat(0);
     
