@@ -187,14 +187,14 @@ void distance(){
                     Z_reco=b.LocationAtPoint(m).Z();
                     
                     Wire_reco=Z_reco;
-                    Tick_reco=X_reco+44.0;
+                    Tick_reco=X_reco+44.5744;
                     
                     for (auto const& hit : hits) {//START CLUSTER HIT LOOP
                        charge1 = hit->Integral();
                         if (charge1 <0.0001)
                             continue;
                         Wire_cluster = hit->WireID().Wire * 0.3;//What is this?
-                        Tick_cluster = hit->PeakTime() * 0.055;//What is this?
+                        Tick_cluster = hit->PeakTime() * 0.0557179;//What is this?
                         pointdistance=sqrt((pow(Wire_cluster-Wire_reco,2))+(pow(Tick_cluster-Tick_reco,2)));
                         
                         if(pointdistance<pointdistance_smallest){
