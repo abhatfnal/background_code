@@ -158,11 +158,14 @@ void RecoEfficiency::analyze(art::Event const & e)
         if (mctrack_handle->size() <0 || abs(pdg)!=13)
             continue;
         
+        auto mctrackid = mctrack_vec[i_c].TrackID();
+        
+        
         mctrackcounter++;
         
         
         cout<<"MCTrack Counter: "<<mctrackcounter<<endl;
-        
+     //   cout<<"MC TRACK ID: "<<mctrackid<<endl;
         
         
         Int_t recotrackcounter=0;
@@ -171,46 +174,42 @@ void RecoEfficiency::analyze(art::Event const & e)
             recotrackcounter++;
             cout<<"RecoTrack Counter: "<<recotrackcounter<<endl;
             
-            //     auto hits = track_hit_assn_v.at(i_t);
+            
             const std::vector<art::Ptr<recob::Hit> > hit_v = track_hit_assn_v.at(i_t);
             
-            Int_t hitcounter=0;
-            Int_t backtrackedhitcounter=0;
+            Double_t hitcounter=0.0;
+            Double_t backtrackedhitcounter=0.0;
             Double_t ratio=0.0;
             for (art::Ptr<recob::Hit> hit : hit_v){
                 
                 hitcounter++;
-            //    cout<<"hitcounter1: "<<hitcounter<<endl;
+                
                 auto hitidx = hit.key();
                 
                 std::vector<simb::MCParticle const*> particle_vec;
                 std::vector<anab::BackTrackerHitMatchingData const*> match_vec;
                 backtrack_handle.get(hitidx, particle_vec, match_vec);
                 
-                Int_t btmu=0;
+                
                 
                 for(size_t i_p=0; i_p<particle_vec.size(); ++i_p){
                     
-                    auto mctrkid = particle_vec.at(i_p)->TrackId();
+                    auto pdg_particle=particle_vec.at(i_p)->PdgCode();
                     
-                //    cout<<"isMaxIDE: "<<match_vec[i_p]->isMaxIDE<<endl;
                     
+                    
+                    auto mcparticleid = particle_vec.at(i_p)->TrackId();
+                    
+                    if (abs(pdg_particle)!=13 || mcparticleid!=mctrackid )
+                        continue;
+
+                    cout<<"PARTICLE ID: "<<mcparticleid<<endl;
+                    cout<<"MC TRACK ID: "<<mctrackid<<endl;
                     if (match_vec[i_p]->isMaxIDE==1){
-                        btmu=mctrkid;
                         backtrackedhitcounter++;
-                        cout<<"btmu: "<<btmu<<endl;
-                  //      cout<<"hitcounter2: "<<hitcounter<<endl;
-                  //      cout<<"backtrackedhitcounter1: "<<backtrackedhitcounter<<endl;
-                        
                     }
                     
-                    //    cout<<"MCTRACK ID: "<<mctrkid<<endl;
-               //     cout<<"hitcounter3: "<<hitcounter<<endl;
-               //     cout<<"backtrackedhitcounter2: "<<backtrackedhitcounter<<endl;
-                    
                 }
-              //  cout<<"hitcounter4: "<<hitcounter<<endl;
-             //   cout<<"backtrackedhitcounter3: "<<backtrackedhitcounter<<endl;
             }
             cout<<"hitcounter: "<<hitcounter<<endl;
             cout<<"backtrackedhitcounter: "<<backtrackedhitcounter<<endl;
@@ -220,8 +219,8 @@ void RecoEfficiency::analyze(art::Event const & e)
         
         //  cout<<"Smallest Distance: "<<distance_smallest<<endl;
         //    cout<<"******Best Match for Cluster : "<<mctrackcounter<<" is reco track number: "<<trackcounter_smallest<<" with distance:  "<<distance_smallest<<"*********"<<endl;
-   //     cout<<"hitcounter6: "<<hitcounter<<endl;
-   //     cout<<"backtrackedhitcounter5: "<<backtrackedhitcounter<<endl;
+        //     cout<<"hitcounter6: "<<hitcounter<<endl;
+        //     cout<<"backtrackedhitcounter5: "<<backtrackedhitcounter<<endl;
         /*
          
          for (auto const& hit : hits) {//START CLUSTER HIT LOOP
