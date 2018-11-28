@@ -180,7 +180,7 @@ void RecoEfficiency::analyze(art::Event const & e)
             for (art::Ptr<recob::Hit> hit : hit_v){
                 
                 hitcounter++;
-                cout<<"hitcounter1: "<<hitcounter<<endl;
+            //    cout<<"hitcounter1: "<<hitcounter<<endl;
                 auto hitidx = hit.key();
                 
                 std::vector<simb::MCParticle const*> particle_vec;
@@ -199,21 +199,21 @@ void RecoEfficiency::analyze(art::Event const & e)
                         btmu=mctrkid;
                         backtrackedhitcounter++;
                         cout<<"btmu: "<<btmu<<endl;
-                        cout<<"hitcounter2: "<<hitcounter<<endl;
-                        cout<<"backtrackedhitcounter1: "<<backtrackedhitcounter<<endl;
+                  //      cout<<"hitcounter2: "<<hitcounter<<endl;
+                  //      cout<<"backtrackedhitcounter1: "<<backtrackedhitcounter<<endl;
                         
                     }
                     
                     //    cout<<"MCTRACK ID: "<<mctrkid<<endl;
-                    cout<<"hitcounter3: "<<hitcounter<<endl;
-                    cout<<"backtrackedhitcounter2: "<<backtrackedhitcounter<<endl;
+               //     cout<<"hitcounter3: "<<hitcounter<<endl;
+               //     cout<<"backtrackedhitcounter2: "<<backtrackedhitcounter<<endl;
                     
                 }
-                cout<<"hitcounter4: "<<hitcounter<<endl;
-                cout<<"backtrackedhitcounter3: "<<backtrackedhitcounter<<endl;
+              //  cout<<"hitcounter4: "<<hitcounter<<endl;
+             //   cout<<"backtrackedhitcounter3: "<<backtrackedhitcounter<<endl;
             }
-            cout<<"hitcounter5: "<<hitcounter<<endl;
-            cout<<"backtrackedhitcounter4: "<<backtrackedhitcounter<<endl;
+            cout<<"hitcounter: "<<hitcounter<<endl;
+            cout<<"backtrackedhitcounter: "<<backtrackedhitcounter<<endl;
             ratio=backtrackedhitcounter/hitcounter;
             cout<<"ratio: "<<ratio<<endl;
         }//END RECO TRACK FOR LOOP
