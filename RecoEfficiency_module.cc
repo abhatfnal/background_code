@@ -98,7 +98,7 @@ private:
     std::string fMC_track_tag,fReco_track_tag,fHit_tag,fMatch_tag;
     
     
-    
+    Int_t pdg=0;
     Double_t MC_Track_StartX_det=0.0;
     Double_t MC_Track_StartY_det=0.0;
     Double_t MC_Track_StartZ_det=0.0;
@@ -106,9 +106,10 @@ private:
     Double_t MC_Track_EndY_det=0.0;
     Double_t MC_Track_EndZ_det=0.0;
     Double_t MC_Track_Length=0.0;
+    Double_t MC_Track_Start_Time=0.0;
     Double_t XZangle=0.0;
     Double_t Yangle=0.0;
-    
+    Double_t MC_Particle_Energy=0;
     
     
     Double_t Reco_Track_StartX=0.0;
@@ -126,13 +127,26 @@ private:
     Double_t Reco_Track_EndY_match=0.0;
     Double_t Reco_Track_EndZ_match=0.0;
     Double_t Reco_Track_Length_match=0.0;
+    Double_t Tracklength_ratio=0.0;
+    Double_t Tracklength_difference=0.0;
+    Double_t absTracklength_difference=0.0;
+    Double_t absTracklength_ratio=0.0;
+    //   Double_t fraction_largest;
+    Double_t score;
+    Double_t best_score;
+    Int_t recotrackcounter_best_score;
+    
+    
+    //   art::ServiceHandle<art::TFileService> tfs;
+    
+    //   TTree *Tracktree = new TTree("Tracktree","Tracktree");
+    //   TTree *Matchtree = new TTree("Matchtree","Matchtree");
+    
+    TTree *RecoTracktree;
+    TTree *Matchtree;
     
     
     
-    art::ServiceHandle<art::TFileService> tfs;
-    
-    TTree *Tracktree = new TTree("Tracktree","Tracktree");
-    TTree *Matchtree = new TTree("Matchtree","Matchtree");
 };
 
 
@@ -171,7 +185,7 @@ void RecoEfficiency::analyze(art::Event const & e)
     
     art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> backtrack_handle(hit_handle,e,fMatch_tag);
     
-    cout <<"Event: "<<fEvent<<endl;
+    //   cout <<"Event: "<<fEvent<<endl;
     
     //   LoadVertex(e.run(),e.event());
     
@@ -182,37 +196,50 @@ void RecoEfficiency::analyze(art::Event const & e)
     Int_t mctrackcounter=0;
     
     
-    for (size_t i_c = 0; i_c < mctrack_vec.size(); ++i_c) { //START MCTRACK FOR LOOP
+    //  for (size_t i_c = 0; i_c < mctrack_vec.size(); ++i_c) { //START MCTRACK FOR LOOP
+    for (auto const& track : mctrack_vec){
+        pdg=track.PdgCode();
+        //   cout<<"MC TRACK VECTOR SIZE: "<<mctrack_vec.size()<<endl;
         
-        auto pdg=mctrack_vec[i_c].PdgCode();
-
-      if (mctrack_vec.size() <2 || abs(pdg)!=13)
-          continue;
-
+        if (track.size() <2 || abs(pdg)!=13)
+            continue;
+        
         mctrackcounter++;
-        auto mctrackid=mctrack_vec[i_c].TrackID();
+        //    cout<<"MUON TRACK VECTOR SIZE: "<<mctrack_vec.size()<<endl;
+        auto mctrackid=track.TrackID();
         
         
         //     cout<<"MCTrack Counter: "<<mctrackcounter<<endl;
         //   cout<<"MC TRACK ID: "<<mctrackid<<endl;
-   /*
-        MC_Track_StartX_det=mctrack_vec[i_c].at(0).X();
-        MC_Track_StartY_det=mctrack_vec[i_c].at(0).Y();
-        MC_Track_StartZ_det=mctrack_vec[i_c].at(0).Z();
         
-        MC_Track_EndX_det=mctrack_vec[i_c].at(mctrack_vec.size()-1).X();
-        MC_Track_EndY_det=mctrack_vec[i_c].at(mctrack_vec.size()-1).Y();
-        MC_Track_EndZ_det=mctrack_vec[i_c].at(mctrack_vec.size()-1).Z();
-   */
+        Double_t g4Ticks = detClocks->TPCG4Time2Tick(gen.GetNeutrino().Nu().T()) + detProperties->GetXTicksOffset(0, 0, 0) - detProperties->TriggerOffset();
+        
+        Double_t xtimeoffset = detProperties->ConvertTicksToX(g4Ticks, 0, 0, 0);
+        
+        Double_t xsceoffset = offset.X();
+        Double_t ysceoffset = offset.Y();
+        Double_t zsceoffset = offset.Z();
+        
+        
+        
+        MC_Track_StartX_det=(track.at(0).X()+xtimeoffset+xsceoffset)*(1.114/1.098)-0.6;
+        MC_Track_StartY_det=(track.at(0).Y()+ysceoffset);
+        MC_Track_StartZ_det=(track.at(0).Z()+zsceoffset);
+        
+        MC_Track_EndX_det=(track.at(track.size()-1).X()+xtimeoffset+xsceoffset)*(1.114/1.098)-0.6;
+        MC_Track_EndY_det=(track.at(track.size()-1).Y()+ysceoffset);
+        MC_Track_EndZ_det=(track.at(track.size()-1).Z()+zsceoffset);
+        MC_Track_Start_Time=track.at(0).T();
         MC_Track_Length=sqrt(pow((MC_Track_EndX_det-MC_Track_StartX_det),2)+pow((MC_Track_EndY_det-MC_Track_StartY_det),2)+pow((MC_Track_EndZ_det-MC_Track_StartZ_det),2));
         
         XZangle=((MC_Track_EndX_det-MC_Track_StartX_det)/(MC_Track_EndZ_det-MC_Track_StartZ_det));
         
         Yangle=(sqrt(pow((MC_Track_EndZ_det-MC_Track_StartZ_det),2)+pow((MC_Track_EndX_det-MC_Track_StartX_det),2))/(MC_Track_EndY_det-MC_Track_StartY_det));
         
-        Double_t ratio_largest=0.0;
+        best_score=0.0;
         Int_t recotrackcounter=0;
-        Int_t recotrackcounter_largestratio=0;
+        recotrackcounter_best_score=0;
+        
         if (recotrack_handle->size()==0)
         {cout<<"*************ZERO RECO TRACKS FOUND"<<endl;}
         for (size_t i_t = 0; i_t < recotrack_vec.size(); ++i_t) {//START RECOTRACK FOR LOOP
@@ -221,21 +248,22 @@ void RecoEfficiency::analyze(art::Event const & e)
             
             Reco_Track_StartX= recotrack_vec[i_t].Vertex().X();
             
-             Reco_Track_StartY= recotrack_vec[i_t].Vertex().Y();
-             Reco_Track_StartZ= recotrack_vec[i_t].Vertex().Z();
-             
-             Reco_Track_EndX=recotrack_vec[i_t].End().X();
-             Reco_Track_EndY=recotrack_vec[i_t].End().Y();
-             Reco_Track_EndZ=recotrack_vec[i_t].End().Z();
-             
-             Reco_Track_Length=sqrt(pow((Reco_Track_EndX-Reco_Track_StartX),2)+pow((Reco_Track_EndY-Reco_Track_StartY),2)+pow((Reco_Track_EndZ-Reco_Track_StartZ),2));
-             
+            Reco_Track_StartY= recotrack_vec[i_t].Vertex().Y();
+            Reco_Track_StartZ= recotrack_vec[i_t].Vertex().Z();
+            
+            Reco_Track_EndX=recotrack_vec[i_t].End().X();
+            Reco_Track_EndY=recotrack_vec[i_t].End().Y();
+            Reco_Track_EndZ=recotrack_vec[i_t].End().Z();
+            
+            Reco_Track_Length=sqrt(pow((Reco_Track_EndX-Reco_Track_StartX),2)+pow((Reco_Track_EndY-Reco_Track_StartY),2)+pow((Reco_Track_EndZ-Reco_Track_StartZ),2));
+            
             
             const std::vector<art::Ptr<recob::Hit> > hit_v = track_hit_assn_v.at(i_t);
             
             Double_t hitcounter=0.0;
             Double_t backtrackedhitcounter=0.0;
-            Double_t ratio=0.0;
+            Double_t fraction=0.0;
+            score=0.0;
             for (art::Ptr<recob::Hit> hit : hit_v){//START HIT FOR LOOP
                 
                 hitcounter++;
@@ -253,6 +281,7 @@ void RecoEfficiency::analyze(art::Event const & e)
                     auto pdg_particle=particle_vec.at(i_p)->PdgCode();
                     
                     auto mcparticleid = particle_vec.at(i_p)->TrackId();
+                    MC_Particle_Energy= particle_vec.at(i_p)->E();
                     
                     if (abs(pdg_particle)!=13 || (int)mcparticleid!=(int)mctrackid || match_vec[i_p]->isMaxIDE!=1  )
                         continue;
@@ -267,31 +296,37 @@ void RecoEfficiency::analyze(art::Event const & e)
             }//END HIT FOR LOOP
             //   cout<<"hitcounter: "<<hitcounter<<endl;
             //   cout<<"backtrackedhitcounter: "<<backtrackedhitcounter<<endl;
-            ratio=backtrackedhitcounter/hitcounter;
-            if (ratio>ratio_largest){
-                recotrackcounter_largestratio=recotrackcounter;
-                ratio_largest=ratio;
-                /*
-                 Reco_Track_StartX_match=Reco_Track_StartX;
-                 Reco_Track_StartY_match=Reco_Track_StartY;
-                 Reco_Track_StartZ_match=Reco_Track_StartZ;
-                 Reco_Track_EndX_match=Reco_Track_EndX;
-                 Reco_Track_EndY_match=Reco_Track_EndY;
-                 Reco_Track_EndZ_match=Reco_Track_EndZ;
-                 Reco_Track_Length_match=Reco_Track_Length;
-                 */
-                cout<<"**********************************ratio: "<<ratio<<endl;
+            fraction=backtrackedhitcounter/hitcounter;
+            score=fraction*(Reco_Track_Length/MC_Track_Length);
+            if (score>best_score){
+                recotrackcounter_best_score=recotrackcounter;
+                best_score=score;
+                
+                Reco_Track_StartX_match=Reco_Track_StartX;
+                Reco_Track_StartY_match=Reco_Track_StartY;
+                Reco_Track_StartZ_match=Reco_Track_StartZ;
+                Reco_Track_EndX_match=Reco_Track_EndX;
+                Reco_Track_EndY_match=Reco_Track_EndY;
+                Reco_Track_EndZ_match=Reco_Track_EndZ;
+                Reco_Track_Length_match=Reco_Track_Length;
+                Tracklength_ratio=((MC_Track_Length-Reco_Track_Length_match)/MC_Track_Length);
+                absTracklength_ratio=abs(Tracklength_ratio);
+                Tracklength_difference=MC_Track_Length-Reco_Track_Length_match;
+                absTracklength_difference=abs(Tracklength_difference);
+                //      cout<<"**********************************fraction: "<<fraction<<endl;
             }
             
-            //         Matchtree->Fill();
+            
             
         }//END RECO TRACK FOR LOOP
-        if (ratio_largest==0){
+        Matchtree->Fill();
+  /*
+        if (best_score==0){
             cout<<"MC TRACK # "<<mctrackcounter<<" DOES NOT have a RECO TRACK match."<<endl;
         }
-        else {cout<<"MC TRACK # "<<mctrackcounter<<" matches RECO TRACK # "<<recotrackcounter_largestratio<<" with RATIO: "<<ratio_largest<<endl;}
-        /*
-         
+        else {cout<<"MC TRACK # "<<mctrackcounter<<" matches RECO TRACK # "<<recotrackcounter_best_score<<" with best_score: "<<best_score<<endl;}
+        
+        
          for (auto const& hit : hits) {//START CLUSTER HIT LOOP
          charge = hit->Integral();
          cluster_charge += charge;
@@ -301,13 +336,26 @@ void RecoEfficiency::analyze(art::Event const & e)
          
          
          */
-        //     Tracktree->Fill();
-
+        
+        
     }//END MCTRACK FOR LOOP
     
-    
+    for (size_t i_t = 0; i_t < recotrack_vec.size(); ++i_t) {//START RECOTRACK FOR LOOP
+        //cout<<"RecoTrack Counter: "<<recotrackcounter<<endl;
+        
+        Reco_Track_StartX= recotrack_vec[i_t].Vertex().X();
+        
+        Reco_Track_StartY= recotrack_vec[i_t].Vertex().Y();
+        Reco_Track_StartZ= recotrack_vec[i_t].Vertex().Z();
+        
+        Reco_Track_EndX=recotrack_vec[i_t].End().X();
+        Reco_Track_EndY=recotrack_vec[i_t].End().Y();
+        Reco_Track_EndZ=recotrack_vec[i_t].End().Z();
+        
+        Reco_Track_Length=sqrt(pow((Reco_Track_EndX-Reco_Track_StartX),2)+pow((Reco_Track_EndY-Reco_Track_StartY),2)+pow((Reco_Track_EndZ-Reco_Track_StartZ),2));
+        RecoTracktree->Fill();
+    }
 }
-
 
 void RecoEfficiency::beginJob()
 { // get detector specific properties
@@ -328,22 +376,35 @@ void RecoEfficiency::beginJob()
      //   Matchtree->Branch("pointdistance_smallest",&pointdistance_smallest,"pointdistance_smallest/D");
      Matchtree->Branch("distance_smallest",&distance_smallest,"distance_smallest/D");
      */
-    art::ServiceHandle<art::TFileService> tfs;
-    Tracktree->Branch("MC_Track_StartX_det",&MC_Track_StartX_det,"MC_Track_StartX_det/D");
-    Tracktree->Branch("MC_Track_StartY_det",&MC_Track_StartY_det,"MC_Track_StartY_det/D");
-    Tracktree->Branch("MC_Track_StartZ_det",&MC_Track_StartZ_det,"MC_Track_StartZ_det/D");
-    Tracktree->Branch("MC_Track_EndX_det",&MC_Track_EndX_det,"MC_Track_EndX_det/D");
-    Tracktree->Branch("MC_Track_EndY_det",&MC_Track_EndY_det,"MC_Track_EndY_det/D");
-    Tracktree->Branch("MC_Track_EndZ_det",&MC_Track_EndZ_det,"MC_Track_EndZ_det/D");
-    Tracktree->Branch("XZangle",&XZangle,"XZangle/D");
-    Tracktree->Branch("Yangle",&Yangle,"Yangle/D");
-    Tracktree->Branch("Reco_Track_StartX",&Reco_Track_StartX,"Reco_Track_StartX/D");
-    Tracktree->Branch("Reco_Track_StartY",&Reco_Track_StartY,"Reco_Track_StartY/D");
-    Tracktree->Branch("Reco_Track_StartZ",&Reco_Track_StartZ,"Reco_Track_StartZ/D");
-    Tracktree->Branch("Reco_Track_EndX",&Reco_Track_EndX,"Reco_Track_EndX/D");
-    Tracktree->Branch("Reco_Track_EndY",&Reco_Track_EndY,"Reco_Track_EndY/D");
-    Tracktree->Branch("Reco_Track_EndZ",&Reco_Track_EndZ,"Reco_Track_EndZ/D");
+    //CORRECTIONS TO X OFFSET FOR TRACKS FALLING OUT OF THE 4.8ms spill
+    auto const& detProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
+    auto const& detClocks = lar::providerFrom<detinfo::DetectorClocksService>();
     
+    //SCE correction
+    auto const *SCE = lar::providerFrom<spacecharge::SpaceChargeService>();
+    auto offset = SCE->GetPosOffsets(geo::Point_t(true_x,true_y,true_z));
+    
+    
+    art::ServiceHandle<art::TFileService> tfs;
+    
+    
+    Matchtree = tfs->make<TTree>("Matchtree",    "Matchtree");
+    RecoTracktree = tfs->make<TTree>("RecoTracktree",    "RecoTracktree");
+    
+    Matchtree->Branch("MC_Track_StartX_det",&MC_Track_StartX_det,"MC_Track_StartX_det/D");
+    Matchtree->Branch("MC_Track_StartY_det",&MC_Track_StartY_det,"MC_Track_StartY_det/D");
+    Matchtree->Branch("MC_Track_StartZ_det",&MC_Track_StartZ_det,"MC_Track_StartZ_det/D");
+    Matchtree->Branch("MC_Track_EndX_det",&MC_Track_EndX_det,"MC_Track_EndX_det/D");
+    Matchtree->Branch("MC_Track_EndY_det",&MC_Track_EndY_det,"MC_Track_EndY_det/D");
+    Matchtree->Branch("MC_Track_EndZ_det",&MC_Track_EndZ_det,"MC_Track_EndZ_det/D");
+    Matchtree->Branch("MC_Track_Start_Time",&MC_Track_Start_Time,"MC_Track_Start_Time/D");
+
+    
+    Matchtree->Branch("MC_Track_Length",&MC_Track_Length,"MC_Track_Length/D");
+    Matchtree->Branch("XZangle",&XZangle,"XZangle/D");
+    Matchtree->Branch("Yangle",&Yangle,"Yangle/D");
+    Matchtree->Branch("MC_Particle_Energy",&MC_Particle_Energy,"MC_Particle_Energy/D");
+    Matchtree->Branch("pdg",&pdg,"pdg/I");
     
     Matchtree->Branch("Reco_Track_StartX_match",&Reco_Track_StartX_match,"Reco_Track_StartX_match/D");
     Matchtree->Branch("Reco_Track_StartY_match",&Reco_Track_StartY_match,"Reco_Track_StartY_match/D");
@@ -351,6 +412,28 @@ void RecoEfficiency::beginJob()
     Matchtree->Branch("Reco_Track_EndX_match",&Reco_Track_EndX_match,"Reco_Track_EndX_match/D");
     Matchtree->Branch("Reco_Track_EndY_match",&Reco_Track_EndY_match,"Reco_Track_EndY_match/D");
     Matchtree->Branch("Reco_Track_EndZ_match",&Reco_Track_EndZ_match,"Reco_Track_EndZ_match/D");
+    Matchtree->Branch("Reco_Track_Length_match",&Reco_Track_Length_match,"Reco_Track_Length_match/D");
+    Matchtree->Branch("Tracklength_ratio",&Tracklength_ratio,"Tracklength_ratio/D");
+    Matchtree->Branch("absTracklength_ratio",&absTracklength_ratio,"absTracklength_ratio/D");
+    Matchtree->Branch("Tracklength_difference",&Tracklength_difference,"Tracklength_difference/D");
+    Matchtree->Branch("absTracklength_difference",&absTracklength_difference,"absTracklength_difference/D");
+    //   Matchtree->Branch("fraction_largest",&fraction_largest,"fraction_largest/D");
+    Matchtree->Branch("score",&score,"score/D");
+    Matchtree->Branch("best_score",&best_score,"best_score/D");
+    
+    
+    
+    RecoTracktree->Branch("Reco_Track_StartX",&Reco_Track_StartX,"Reco_Track_StartX/D");
+    RecoTracktree->Branch("Reco_Track_StartY",&Reco_Track_StartY,"Reco_Track_StartY/D");
+    RecoTracktree->Branch("Reco_Track_StartZ",&Reco_Track_StartZ,"Reco_Track_StartZ/D");
+    RecoTracktree->Branch("Reco_Track_EndX",&Reco_Track_EndX,"Reco_Track_EndX/D");
+    RecoTracktree->Branch("Reco_Track_EndY",&Reco_Track_EndY,"Reco_Track_EndY/D");
+    RecoTracktree->Branch("Reco_Track_EndZ",&Reco_Track_EndZ,"Reco_Track_EndZ/D");
+    RecoTracktree->Branch("Reco_Track_Length",&Reco_Track_Length,"Reco_Track_Length/D");
+    
+    
+    
+    
     
     
 }
