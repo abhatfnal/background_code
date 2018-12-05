@@ -36,6 +36,8 @@ using namespace std;
 //#include "larcore/Geometry/GeometryCore.h"
 #include "lardata/Utilities/GeometryUtilities.h"
 #include "lardata/DetectorInfoServices/DetectorPropertiesService.h"
+#include "larevt/SpaceChargeServices/SpaceChargeService.h"
+#include "lardata/DetectorInfoServices/DetectorClocksService.h"
 #include "lardataobj/MCBase/MCTrack.h"
 #include "lardataobj/RecoBase/Cluster.h"
 #include "lardataobj/RecoBase/Hit.h"
@@ -185,6 +187,11 @@ void RecoEfficiency::analyze(art::Event const & e)
     
     art::FindMany<simb::MCParticle,anab::BackTrackerHitMatchingData> backtrack_handle(hit_handle,e,fMatch_tag);
     
+    
+    
+    
+    
+    
     //   cout <<"Event: "<<fEvent<<endl;
     
     //   LoadVertex(e.run(),e.event());
@@ -194,6 +201,8 @@ void RecoEfficiency::analyze(art::Event const & e)
     auto const& recotrack_vec(*recotrack_handle);
     
     Int_t mctrackcounter=0;
+    
+    
     
     
     //  for (size_t i_c = 0; i_c < mctrack_vec.size(); ++i_c) { //START MCTRACK FOR LOOP
@@ -212,23 +221,61 @@ void RecoEfficiency::analyze(art::Event const & e)
         //     cout<<"MCTrack Counter: "<<mctrackcounter<<endl;
         //   cout<<"MC TRACK ID: "<<mctrackid<<endl;
         
-        Double_t g4Ticks = detClocks->TPCG4Time2Tick(gen.GetNeutrino().Nu().T()) + detProperties->GetXTicksOffset(0, 0, 0) - detProperties->TriggerOffset();
+        
+        
+        //CORRECTIONS TO X OFFSET FOR TRACKS FALLING OUT OF THE 4.8ms spill
+        auto const& detProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
+        auto const& detClocks = lar::providerFrom<detinfo::DetectorClocksService>();
+        
+
+        
+        
+        Double_t g4Ticks = detClocks->TPCG4Time2Tick(track.at(0).T()) + detProperties->GetXTicksOffset(0, 0, 0) - detProperties->TriggerOffset();
         
         Double_t xtimeoffset = detProperties->ConvertTicksToX(g4Ticks, 0, 0, 0);
         
-        Double_t xsceoffset = offset.X();
-        Double_t ysceoffset = offset.Y();
-        Double_t zsceoffset = offset.Z();
+
+        
+        Double_t       MC_Track_StartX=(track.at(0).X());
+        Double_t       MC_Track_StartY=(track.at(0).Y());
+        Double_t       MC_Track_StartZ=(track.at(0).Z());
+        
+        Double_t       MC_Track_EndX=(track.at(track.size()-1).X());
+        Double_t       MC_Track_EndY=(track.at(track.size()-1).Y());
+        Double_t       MC_Track_EndZ=(track.at(track.size()-1).Z());
+        
+        //SCE correction
+        auto const *SCE = lar::providerFrom<spacecharge::SpaceChargeService>();
+        auto startoffset = SCE->GetPosOffsets(geo::Point_t(MC_Track_StartX,MC_Track_StartY,MC_Track_StartZ));
+        auto endoffset = SCE->GetPosOffsets(geo::Point_t(MC_Track_EndX,MC_Track_EndY,MC_Track_EndZ));
+        
+
+        
+        Double_t startxsceoffset = startoffset.X();
+        Double_t startysceoffset = startoffset.Y();
+        Double_t startzsceoffset = startoffset.Z();
+        
+        
+        Double_t endxsceoffset = endoffset.X();
+        Double_t endysceoffset = endoffset.Y();
+        Double_t endzsceoffset = endoffset.Z();
+
         
         
         
-        MC_Track_StartX_det=(track.at(0).X()+xtimeoffset+xsceoffset)*(1.114/1.098)-0.6;
-        MC_Track_StartY_det=(track.at(0).Y()+ysceoffset);
-        MC_Track_StartZ_det=(track.at(0).Z()+zsceoffset);
         
-        MC_Track_EndX_det=(track.at(track.size()-1).X()+xtimeoffset+xsceoffset)*(1.114/1.098)-0.6;
-        MC_Track_EndY_det=(track.at(track.size()-1).Y()+ysceoffset);
-        MC_Track_EndZ_det=(track.at(track.size()-1).Z()+zsceoffset);
+        
+        
+        
+        
+        
+        MC_Track_StartX_det=(track.at(0).X()+xtimeoffset+startxsceoffset)*(1.114/1.098)-0.6;
+        MC_Track_StartY_det=(track.at(0).Y()+startysceoffset);
+        MC_Track_StartZ_det=(track.at(0).Z()+startzsceoffset);
+        
+        MC_Track_EndX_det=(track.at(track.size()-1).X()+xtimeoffset+endxsceoffset)*(1.114/1.098)-0.6;
+        MC_Track_EndY_det=(track.at(track.size()-1).Y()+endysceoffset);
+        MC_Track_EndZ_det=(track.at(track.size()-1).Z()+endzsceoffset);
         MC_Track_Start_Time=track.at(0).T();
         MC_Track_Length=sqrt(pow((MC_Track_EndX_det-MC_Track_StartX_det),2)+pow((MC_Track_EndY_det-MC_Track_StartY_det),2)+pow((MC_Track_EndZ_det-MC_Track_StartZ_det),2));
         
@@ -320,13 +367,13 @@ void RecoEfficiency::analyze(art::Event const & e)
             
         }//END RECO TRACK FOR LOOP
         Matchtree->Fill();
-  /*
-        if (best_score==0){
-            cout<<"MC TRACK # "<<mctrackcounter<<" DOES NOT have a RECO TRACK match."<<endl;
-        }
-        else {cout<<"MC TRACK # "<<mctrackcounter<<" matches RECO TRACK # "<<recotrackcounter_best_score<<" with best_score: "<<best_score<<endl;}
-        
-        
+        /*
+         if (best_score==0){
+         cout<<"MC TRACK # "<<mctrackcounter<<" DOES NOT have a RECO TRACK match."<<endl;
+         }
+         else {cout<<"MC TRACK # "<<mctrackcounter<<" matches RECO TRACK # "<<recotrackcounter_best_score<<" with best_score: "<<best_score<<endl;}
+         
+         
          for (auto const& hit : hits) {//START CLUSTER HIT LOOP
          charge = hit->Integral();
          cluster_charge += charge;
@@ -376,13 +423,6 @@ void RecoEfficiency::beginJob()
      //   Matchtree->Branch("pointdistance_smallest",&pointdistance_smallest,"pointdistance_smallest/D");
      Matchtree->Branch("distance_smallest",&distance_smallest,"distance_smallest/D");
      */
-    //CORRECTIONS TO X OFFSET FOR TRACKS FALLING OUT OF THE 4.8ms spill
-    auto const& detProperties = lar::providerFrom<detinfo::DetectorPropertiesService>();
-    auto const& detClocks = lar::providerFrom<detinfo::DetectorClocksService>();
-    
-    //SCE correction
-    auto const *SCE = lar::providerFrom<spacecharge::SpaceChargeService>();
-    auto offset = SCE->GetPosOffsets(geo::Point_t(true_x,true_y,true_z));
     
     
     art::ServiceHandle<art::TFileService> tfs;
@@ -398,7 +438,7 @@ void RecoEfficiency::beginJob()
     Matchtree->Branch("MC_Track_EndY_det",&MC_Track_EndY_det,"MC_Track_EndY_det/D");
     Matchtree->Branch("MC_Track_EndZ_det",&MC_Track_EndZ_det,"MC_Track_EndZ_det/D");
     Matchtree->Branch("MC_Track_Start_Time",&MC_Track_Start_Time,"MC_Track_Start_Time/D");
-
+    
     
     Matchtree->Branch("MC_Track_Length",&MC_Track_Length,"MC_Track_Length/D");
     Matchtree->Branch("XZangle",&XZangle,"XZangle/D");
