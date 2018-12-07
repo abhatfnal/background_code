@@ -279,9 +279,9 @@ void RecoEfficiency::analyze(art::Event const & e)
         MC_Track_Start_Time=track.at(0).T();
         MC_Track_Length=sqrt(pow((MC_Track_EndX_det-MC_Track_StartX_det),2)+pow((MC_Track_EndY_det-MC_Track_StartY_det),2)+pow((MC_Track_EndZ_det-MC_Track_StartZ_det),2));
         
-        XZangle=((MC_Track_EndX_det-MC_Track_StartX_det)/(MC_Track_EndZ_det-MC_Track_StartZ_det));
+        XZangle=atan((MC_Track_EndX_det-MC_Track_StartX_det)/(MC_Track_EndZ_det-MC_Track_StartZ_det));
         
-        Yangle=(sqrt(pow((MC_Track_EndZ_det-MC_Track_StartZ_det),2)+pow((MC_Track_EndX_det-MC_Track_StartX_det),2))/(MC_Track_EndY_det-MC_Track_StartY_det));
+        Yangle=atan(sqrt(pow((MC_Track_EndZ_det-MC_Track_StartZ_det),2)+pow((MC_Track_EndX_det-MC_Track_StartX_det),2))/(MC_Track_EndY_det-MC_Track_StartY_det));
         
         best_score=0.0;
         Int_t recotrackcounter=0;
@@ -360,20 +360,22 @@ void RecoEfficiency::analyze(art::Event const & e)
                 absTracklength_ratio=abs(Tracklength_ratio);
                 Tracklength_difference=MC_Track_Length-Reco_Track_Length_match;
                 absTracklength_difference=abs(Tracklength_difference);
-                //      cout<<"**********************************fraction: "<<fraction<<endl;
+                 //     cout<<"**********************************best_score: "<<best_score<<endl;
             }
             
             
             
         }//END RECO TRACK FOR LOOP
+        cout<<"**********************************best_score: "<<best_score<<endl;
+        
         Matchtree->Fill();
-        /*
+       
          if (best_score==0){
          cout<<"MC TRACK # "<<mctrackcounter<<" DOES NOT have a RECO TRACK match."<<endl;
          }
          else {cout<<"MC TRACK # "<<mctrackcounter<<" matches RECO TRACK # "<<recotrackcounter_best_score<<" with best_score: "<<best_score<<endl;}
          
-         
+         /*
          for (auto const& hit : hits) {//START CLUSTER HIT LOOP
          charge = hit->Integral();
          cluster_charge += charge;
