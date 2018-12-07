@@ -108,6 +108,7 @@ private:
     Double_t MC_Track_EndY_det=0.0;
     Double_t MC_Track_EndZ_det=0.0;
     Double_t MC_Track_Length=0.0;
+    Double_t MC_Track_Length_Event=0.0;
     Double_t MC_Track_Start_Time=0.0;
     Double_t XZangle=0.0;
     Double_t Yangle=0.0;
@@ -129,10 +130,13 @@ private:
     Double_t Reco_Track_EndY_match=0.0;
     Double_t Reco_Track_EndZ_match=0.0;
     Double_t Reco_Track_Length_match=0.0;
+    Double_t Reco_Track_Length_match_Event=0.0;
     Double_t Tracklength_ratio=0.0;
     Double_t Tracklength_difference=0.0;
     Double_t absTracklength_difference=0.0;
+    Double_t absTracklength_difference_Event=0.0;
     Double_t absTracklength_ratio=0.0;
+    Double_t absTracklength_ratio_Event=0.0;
     //   Double_t fraction_largest;
     Double_t score;
     Double_t best_score;
@@ -146,6 +150,7 @@ private:
     
     TTree *RecoTracktree;
     TTree *Matchtree;
+    TTree *Eventtree;
     
     
     
@@ -283,12 +288,14 @@ void RecoEfficiency::analyze(art::Event const & e)
         
         Yangle=atan(sqrt(pow((MC_Track_EndZ_det-MC_Track_StartZ_det),2)+pow((MC_Track_EndX_det-MC_Track_StartX_det),2))/(MC_Track_EndY_det-MC_Track_StartY_det));
         
+
+        
         best_score=0.0;
         Int_t recotrackcounter=0;
         recotrackcounter_best_score=0;
         
-        if (recotrack_handle->size()==0)
-        {cout<<"*************ZERO RECO TRACKS FOUND"<<endl;}
+     //   if (recotrack_handle->size()==0)
+     //   {cout<<"*************ZERO RECO TRACKS FOUND"<<endl;}
         for (size_t i_t = 0; i_t < recotrack_vec.size(); ++i_t) {//START RECOTRACK FOR LOOP
             recotrackcounter++;
             //cout<<"RecoTrack Counter: "<<recotrackcounter<<endl;
@@ -366,16 +373,16 @@ void RecoEfficiency::analyze(art::Event const & e)
             
             
         }//END RECO TRACK FOR LOOP
-        cout<<"**********************************best_score: "<<best_score<<endl;
+    //    cout<<"**********************************best_score: "<<best_score<<endl;
         
         Matchtree->Fill();
-       
+      /*
          if (best_score==0){
          cout<<"MC TRACK # "<<mctrackcounter<<" DOES NOT have a RECO TRACK match."<<endl;
          }
          else {cout<<"MC TRACK # "<<mctrackcounter<<" matches RECO TRACK # "<<recotrackcounter_best_score<<" with best_score: "<<best_score<<endl;}
          
-         /*
+        
          for (auto const& hit : hits) {//START CLUSTER HIT LOOP
          charge = hit->Integral();
          cluster_charge += charge;
@@ -386,8 +393,8 @@ void RecoEfficiency::analyze(art::Event const & e)
          
          */
         
-        
     }//END MCTRACK FOR LOOP
+            
     
     for (size_t i_t = 0; i_t < recotrack_vec.size(); ++i_t) {//START RECOTRACK FOR LOOP
         //cout<<"RecoTrack Counter: "<<recotrackcounter<<endl;
@@ -404,6 +411,15 @@ void RecoEfficiency::analyze(art::Event const & e)
         Reco_Track_Length=sqrt(pow((Reco_Track_EndX-Reco_Track_StartX),2)+pow((Reco_Track_EndY-Reco_Track_StartY),2)+pow((Reco_Track_EndZ-Reco_Track_StartZ),2));
         RecoTracktree->Fill();
     }
+    if (MC_Track_Start_Time/1000 > -300 && MC_Track_Start_Time/1000 < 300 && (MC_Track_Start_Time/1000 < 0 || MC_Track_Start_Time/1000 > 6)){
+        
+        absTracklength_difference_Event+=absTracklength_difference;
+        absTracklength_ratio_Event+=absTracklength_ratio;
+        Reco_Track_Length_match_Event+=Reco_Track_Length_match;
+        MC_Track_Length_Event+=MC_Track_Length;
+        
+    }
+        Eventtree->Fill();
 }
 
 void RecoEfficiency::beginJob()
@@ -432,6 +448,7 @@ void RecoEfficiency::beginJob()
     
     Matchtree = tfs->make<TTree>("Matchtree",    "Matchtree");
     RecoTracktree = tfs->make<TTree>("RecoTracktree",    "RecoTracktree");
+    Eventtree = tfs->make<TTree>("Eventtree",    "Eventtree");
     
     Matchtree->Branch("MC_Track_StartX_det",&MC_Track_StartX_det,"MC_Track_StartX_det/D");
     Matchtree->Branch("MC_Track_StartY_det",&MC_Track_StartY_det,"MC_Track_StartY_det/D");
@@ -474,8 +491,10 @@ void RecoEfficiency::beginJob()
     RecoTracktree->Branch("Reco_Track_Length",&Reco_Track_Length,"Reco_Track_Length/D");
     
     
-    
-    
+    Eventtree->Branch("MC_Track_Length_Event",&MC_Track_Length_Event,"MC_Track_Length_Event/D");
+    Eventtree->Branch("Reco_Track_Length_match_Event",&MC_Track_Length_Event,"Reco_Track_Length_match_Event/D");
+    Eventtree->Branch("absTracklength_difference_Event",&absTracklength_difference_Event,"absTracklength_difference_Event/D");
+    Eventtree->Branch("absTracklength_ratio_Event",&absTracklength_ratio_Event,"absTracklength_ratio_Event/D");
     
     
 }
