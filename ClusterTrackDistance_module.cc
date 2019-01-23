@@ -41,7 +41,7 @@ using namespace std;
 #include "lardataobj/RecoBase/Hit.h"
 #include "lardata/Utilities/AssociationUtil.h"
 #include "lardataobj/RecoBase/Track.h"
-//#include "/uboone/app/users/abhat/gammacatcher/srcs/ubreco/ubreco/ShowerReco/ProximityClustering/Algorithms/ProximityClusterer.h"
+
 // ROOT
 #include "TInterpreter.h"
 #include "TROOT.h"
@@ -145,7 +145,7 @@ ClusterTrackDistance::ClusterTrackDistance(fhicl::ParameterSet const & p)
 // More initializers here.
 {
     
-    
+    //All tags get filled in the fcl file
     fMC_track_tag   = p.get<std::string>("mctrack_tag"    );
     fReco_track_tag = p.get<std::string>("recotrack_tag"  );
     fCluster_tag = p.get<std::string>("cluster_tag"  );
@@ -170,44 +170,41 @@ void ClusterTrackDistance::analyze(art::Event const & e)
     e.getByLabel(fHit_tag,hit_handle);
     
     art::FindMany<recob::Hit> clus_hit_assn_v(cluster_handle, e, fCluster_tag);
-    //  art::FindMany<recob::Track> track_point_assn_v(recotrack_handle, e, fReco_track_tag);
     
-    //   LoadVertex(e.run(),e.event());
+    Int_t clustercounter=0; //Variable to keep track of cluster index
     
-    
-    Int_t clustercounter=0;
-    
-    //  cout<<"cluster_handle->size(): "<<cluster_handle->size()<<endl;
     
     for (size_t i_c = 0, size_cluster = cluster_handle->size(); i_c != size_cluster; ++i_c) { //START CLUSTER FOR LOOP
-        distance_smallest=1e10;
         clustercounter++;
+        //    cout<<"***************************************************Cluster Counter: "<<clustercounter<<endl;
+       
         
-        cluster_charge=0.0;
-        cluster_energy=0.0;
-    //    cout<<"***************************************************Cluster Counter: "<<clustercounter<<endl;
+        distance_smallest=1e10; //Variable for distance between a cluster and nearest reco track, initialized to a large number for comparison
+        cluster_charge=0.0;//Cluster variable initialized to zero
+        cluster_energy=0.0;//Cluster variable initialized to zero
+        
         
         auto hits = clus_hit_assn_v.at(i_c);
         
-        Int_t trackcounter=0;
-        //   Int_t trackcounter_smallest=0;
+        Int_t trackcounter=0;//Variable to keep track of cluster index
+        //Int_t trackcounter_smallest=0;
         
         
-        for (size_t i_t = 0, size_track = recotrack_handle->size(); i_t != size_track; ++i_t) {
+        for (size_t i_t = 0, size_track = recotrack_handle->size(); i_t != size_track; ++i_t) {//START RECO TRACK FOR LOOP
             trackcounter++;
-     //       cout<<"***************************************Track Counter: "<<trackcounter<<endl;
+            //       cout<<"***************************************Track Counter: "<<trackcounter<<endl;
             
             
             auto const& track = recotrack_handle->at(i_t);
             
-            pointdistance_smallest=1e10;
+            pointdistance_smallest=1e10;////Variable for distance between a cluster hit and a reco track point, initialized to a large number for comparison
             for(size_t m=0;m<(track.NumberTrajectoryPoints());m++){//START RECO POINT LOOP
                 
                 
                 X_reco=track.LocationAtPoint(m).X();
                 Y_reco=track.LocationAtPoint(m).Y();
                 Z_reco=track.LocationAtPoint(m).Z();
-             //   cout<<"X_reco: "<<X_reco<<endl;
+                //   cout<<"X_reco: "<<X_reco<<endl;
                 
                 
                 for (auto const& hit : hits) {//START CLUSTER HIT LOOP
@@ -218,7 +215,7 @@ void ClusterTrackDistance::analyze(art::Event const & e)
                     
                     //    cout<<"pointdistance: "<<pointdistance<<endl;
                     
-                    if(pointdistance<pointdistance_smallest){
+                    if(pointdistance<pointdistance_smallest){//comparison IF loop
                         
                         pointdistance_smallest=pointdistance;
                         
@@ -226,7 +223,7 @@ void ClusterTrackDistance::analyze(art::Event const & e)
                         Z_reco_smallest=Z_reco;
                         
                     }
-                                       
+                    
                 }//END CLUSTER HIT LOOP
                 
                 
@@ -235,19 +232,14 @@ void ClusterTrackDistance::analyze(art::Event const & e)
             }//END RECO POINT LOOP
             
             
-            //  cout<<"Pointdistance_smallest: "<<pointdistance_smallest<<endl;
-            //        cout<<"distance_smallest: "<<distance_smallest<<endl;
-            //        cout<<"Pointdistance_smallest: "<<pointdistance_smallest<<endl;
-            
-            if(pointdistance_smallest<distance_smallest){
+              if(pointdistance_smallest<distance_smallest){
                 distance_smallest=pointdistance_smallest;
                 //   trackcounter_smallest=trackcounter;
                 X_reco_best=X_reco_smallest;
                 Z_reco_best=Z_reco_smallest;
-                
-                
-            }
-      //      cout<<"distance_smallest: "<<distance_smallest<<endl;
+                }
+            //      cout<<"distance_smallest: "<<distance_smallest<<endl;
+       
         }//END RECO TRACK FOR LOOP
         
         
@@ -263,8 +255,8 @@ void ClusterTrackDistance::analyze(art::Event const & e)
         
         
         
-  //      cout<<"Smallest Distance: "<<distance_smallest<<endl;
-  //      cout<<"X_reco_best: "<<X_reco_best<<endl;
+        //      cout<<"Smallest Distance: "<<distance_smallest<<endl;
+        //      cout<<"X_reco_best: "<<X_reco_best<<endl;
         //     cout<<"cluster_energy: "<<cluster_energy<<" MeV"<<endl;
         
         Clustertree->Fill();
@@ -292,14 +284,9 @@ void ClusterTrackDistance::beginJob()
     Clustertree->Branch("cluster_hit_x",&cluster_hit_x,"cluster_hit_x/D");
     Clustertree->Branch("Z_reco_best",&Z_reco_best,"Z_reco_best/D");
     Clustertree->Branch("X_reco_best",&X_reco_best,"X_reco_best/D");
-    //   Clustertree->Branch("pointdistance_smallest",&pointdistance_smallest,"pointdistance_smallest/D");
     Clustertree->Branch("distance_smallest",&distance_smallest,"distance_smallest/D");
     Clustertree->Branch("cluster_charge",&cluster_charge,"cluster_charge/D");
     Clustertree->Branch("cluster_energy",&cluster_energy,"cluster_energy/D");
-    //   Clustertree->Branch("charge",&charge,"charge/D");
-    
-    
-    
 }
 
 void ClusterTrackDistance::endJob()
