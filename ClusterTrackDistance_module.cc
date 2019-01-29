@@ -166,7 +166,9 @@ void ClusterTrackDistance::analyze(art::Event const & e)
   auto const& cluster(*cluster_handle);
 
   Int_t clustercounter=0; //Variable to keep track of cluster index
-
+  Int_t numRows=6;
+  Int_t numCols=cluster_handle->size();
+  Double_t array=[numRows][numCols] = { 0 };
 
   for (size_t i_c = 0, size_cluster = cluster_handle->size(); i_c != size_cluster; ++i_c) { //START CLUSTER FOR LOOP
     clustercounter++;
@@ -262,6 +264,7 @@ void ClusterTrackDistance::analyze(art::Event const & e)
 
     Clustertree->Fill();
 
+/*
     cout<<"Cluster Plane: "<<cluster[i_c].View()<<endl;
 
 
@@ -289,6 +292,12 @@ void ClusterTrackDistance::analyze(art::Event const & e)
     cout<<"Start Tick 0: "<<start_tick0<<endl;
     cout<<"Start Tick 1: "<<start_tick1<<endl;
     cout<<"Start Tick 2: "<<start_tick2<<endl;
+*/
+
+for(Int_t row=0;row<numRows;row++){
+
+  array[row][i_c]=????
+}
 
   }//END CLUSTER FOR LOOP
 
